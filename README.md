@@ -20,9 +20,13 @@ It uses Jetson Nano for AI classification, Raspberry Pi for hardware control, AW
         ↓
         
 [Jetson Nano]
+ 
  └─ YOLOv8 classifies waste
+ 
  └─ Rotates stepper motor (based on class)
+ 
  └─ Sends class to Raspberry Pi (TCP)
+ 
  └─ Notifies EC2 via POST /begin
 
 [Raspberry Pi]

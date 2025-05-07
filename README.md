@@ -30,17 +30,24 @@ It uses Jetson Nano for AI classification, Raspberry Pi for hardware control, AW
  └─ Notifies EC2 via POST /begin
 
 [Raspberry Pi]
+
  └─ Activates servo motor (bin opening)
+ 
  └─ Measures distance with ultrasonic sensor
+ 
  └─ Sends class + fill level to EC2 (POST /update)
+ 
 
 [EC2 Server]
+
  └─ Forwards data to Web UI via WebSocket
 
 [Admin Dashboard (React)]
+
  └─ Displays dashboard, statistics, logs
 
 [On-site UI (Pi Display)]
+
  └─ Shows latest classification + fill level
 
 🌀 Stepper Motor Rotation by Class

@@ -1,0 +1,232 @@
+/* styles.css */
+
+/* 전체 배경 */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #e0f7fa, #e0eafc); /* 부드러운 블루 계열 그라데이션 */
+    
+  }
+  
+  /* 버튼 기본 스타일 */
+  .btn {
+    background-color: #2563eb;
+    color: white;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 9999px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .btn:hover {
+    background-color: #1d4ed8;
+  }
+  
+  /* 네비게이션 바 */
+  .navbar {
+    background-color: white;
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 쓰레기량 원통 */
+  .cylinder {
+    width: 100px;
+    height: 160px;
+    border: 4px solid #d1d5db;
+    border-top-left-radius: 9999px;
+    border-top-right-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+    background-color: white;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    margin-bottom: 8px;
+  }
+  
+  .fill {
+    position: absolute;
+    bottom: 0; /* 아래서부터 채움 */
+    left: 0;
+    width: 100%;
+    background-color: green;
+    transition: height 0.5s ease, background-color 0.5s ease;
+    border-radius: 12px 12px 0 0; /* 위만 둥글게 */
+  }
+  
+  /* 전체 레이아웃 */
+  .container {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* 카드 레이아웃 */
+  .card-grid {
+    display: flex;           /* 가로 정렬 */
+    flex-wrap: wrap;          /* 넘치면 다음 줄로 */
+    gap: 32px;                /* 아이템 사이 간격 */
+    justify-content: center;  /* 가운데 정렬 */
+    margin-top: 32px;
+  }
+  
+  
+  /* 로그인/회원가입 폼 */
+  .auth-form {
+    background-color: white;
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 320px;
+  }
+  
+ /*원형 그래프 배치 */
+  .chart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 120%;
+  }
+
+  .table-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+  }
+  
+  .table-style {
+    border-collapse: collapse;
+    width: 80%;
+  }
+  
+  .table-style th, .table-style td {
+    border: 1px solid #ccc;
+    padding: 12px 24px; /* 간격 넉넉하게 */
+    text-align: center;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 12px;
+  }
+  
+  .page-button {
+    padding: 8px 12px;
+    border: none;
+    background-color: #2563eb;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .page-button:hover {
+    background-color: #1d4ed8;
+  }
+  
+
+/*페이지 버튼*/
+  .page-button {
+    padding: 8px 12px;
+    border: none;
+    background-color: #2563eb;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    min-width: 60px;
+  }
+
+  .page-button:hover {
+    background-color: #1d4ed8;
+  }
+
+  .page-button.active {
+    background-color: #1e40af;
+  }
+
+  /*이미지 미리보기*/
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+  
+  .modal-content {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    text-align: center;
+  }
+  
+  .modal-image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+  }
+
+  /*환영페이지 애니메이션 추가*/
+  @keyframes fadeInMove {
+    0% {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeInMove 1s ease-out;
+  }
+  
+.welcome-container {
+  min-height: 100vh;
+  background: linear-gradient(to right, #e0f7fa, #e0eafc); /* 부드러운 블루 계열 그라데이션 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+}
+
+.welcome-box {
+  background-color: white;
+  padding: 48px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 600px;
+  width: 90%;
+}
+
+.welcome-icon {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 24px;
+}
+
+/*드롭다운(select)의 크기 키우기 (패딩 & 폰트 크기 조절)*/
+select {
+  padding: 8px 16px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}

@@ -12,9 +12,13 @@ It uses Jetson Nano for AI classification, Raspberry Pi for hardware control, AW
 | **Admin Web UI**            | React-based dashboard for admins to monitor and manage waste data                  |
 | **Raspberry Pi Display UI** | On-site display showing real-time classification and bin levels (read-only)        |
 
+
 🔄 System Workflow
+
 [User throws waste]
+
         ↓
+        
 [Jetson Nano]
  └─ YOLOv8 classifies waste
  └─ Rotates stepper motor (based on class)

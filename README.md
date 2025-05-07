@@ -1,4 +1,5 @@
 ♻️ Recyclin: AI-Powered Smart Waste Sorting System
+
 Recyclin is an integrated AI-based smart waste classification and monitoring system.
 It uses Jetson Nano for AI classification, Raspberry Pi for hardware control, AWS EC2 for communication, and a React-based Web UI for real-time monitoring and management.
 

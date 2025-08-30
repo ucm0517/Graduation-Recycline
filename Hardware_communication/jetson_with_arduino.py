@@ -12,14 +12,14 @@ import threading
 import Jetson.GPIO as GPIO 
 
 # LED 핀 번호
-LED_PIN = 21
+LED_PIN = 20
 
 # 환경 설정
 os.environ['LD_PRELOAD'] = '/usr/lib/aarch64-linux-gnu/libgomp.so.1'
 os.environ["OMP_NUM_THREADS"] = "2"
 
 # Raspberry Pi 정보
-PI_HOST = '192.168.137.68'
+PI_HOST = '192.168.122.20'
 PI_PORT = 9999
 
 # 아두이노 시리얼 통신 설정
@@ -42,7 +42,7 @@ last_started_time = 0
 
 # LED 초기화 
 def setup_led():
-    GPIO.setmode(GPIO.BOARD)
+    GPIO.setmode(GPIO.BCM)
     GPIO.setup(LED_PIN, GPIO.OUT)
     GPIO.output(LED_PIN, GPIO.HIGH)  # LED 켜기
     print("LED 켜짐 - 젯슨 시스템 동작 중")
@@ -66,15 +66,12 @@ def setup_arduino():
         
     except Exception as e:
         print(f"아두이노 연결 실패: {e}")
-        print("해결 방법:")
-        print("1. USB 케이블 확인")
-        print("2. 포트 확인: ls /dev/tty*")
-        print("3. 권한 설정: sudo chmod 666 /dev/ttyACM0")
+        print(" - USB 케이블 확인")
+        print(" - 권한 설정: sudo chmod 666 /dev/ttyACM0")
         arduino_serial = None
         return False
 
 def send_to_arduino(message):
-    """아두이노로 메시지 전송"""
     global arduino_serial
     if arduino_serial and arduino_serial.is_open:
         try:
@@ -82,7 +79,6 @@ def send_to_arduino(message):
             arduino_serial.write(message_bytes)
             print(f"아두이노로 전송: '{message}'")
             
-            # 아두이노 응답 읽기 (선택적)
             time.sleep(0.1)
             if arduino_serial.in_waiting > 0:
                 response = arduino_serial.readline().decode('utf-8').strip()
@@ -99,7 +95,7 @@ def send_to_arduino(message):
 def send_class_to_pi(class_name):
     """라즈베리파이에 소켓 신호 전송"""
     try:
-        print(f"라즈베리파이 소켓 연결 시도...")
+        print(f"라즈베리파이 소켓 연결 시도")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((PI_HOST, PI_PORT))
             s.sendall(class_name.encode())
@@ -119,7 +115,6 @@ def notify_ui_begin():
         print(f"UI 처리 시작 알림 실패: {e}")
 
 def send_image_to_server(filepath, class_name, angle):
-    """이미지 업로드"""
     if not os.path.exists(filepath):
         print(f"이미지 없음: {filepath}")
         return
@@ -146,12 +141,28 @@ def gstreamer_pipeline(capture_width=1280, capture_height=720,
     )
 
 def check_trash_level(class_name):
-    """현재 쓰레기통 채움률 확인"""
     try:
-        res = requests.get("http://43.202.10.147:3001/data")
+        
+         # DB에서 최신 데이터 조회
+        res = requests.get("http://43.202.10.147:3001/api/levels")
+        
+        if not res.ok:
+            print(f"채움률 API 요청 실패: {res.status_code}")
+            return 0
+            
         level_data = res.json()
-        level = level_data.get(class_name, 0)
-        return level
+        print(f"DB에서 조회한 전체 레벨 데이터: {level_data}")
+        
+        # API 응답 형식에 맞게 파싱
+        for item in level_data:
+            if item.get('type') == class_name:
+                level = item.get('level', 0)
+                print(f"DB에서 조회: {class_name} = {level}%")
+                return level
+        
+        print(f"DB에서 {class_name} 데이터를 찾을 수 없음")
+        return 0
+        
     except Exception as e:
         print(f"채움률 확인 실패: {e}")
         return 0
@@ -179,53 +190,78 @@ def control_step_motor_arduino_with_blocking(class_name):
         print(f"⏰ 아두이노 회전 완료 대기 중... ({rotation_time}초)")
         time.sleep(rotation_time)
     
-    # 3단계: 회전 완료 후 라즈베리파이로 측정 신호 전송
-    print(f"📤 라즈베리파이에 측정 신호 전송: {class_name}")
-    pi_success = send_class_to_pi(class_name)
+    # 측정 전 현재 레벨 저장 (중요!)
+    old_level = get_current_level_quick(class_name)
+    print(f"측정 전 레벨: {class_name} = {old_level}%")
     
+    pi_success = send_class_to_pi(class_name)
     if not pi_success:
-        print("❌ 라즈베리파이 통신 실패")
         return False
     
-    # 4단계: 나머지 아두이노 동작 완료 대기 (라즈베리파이 동작 + 복귀)
+    # 4단계: 기존 시간은 유지 (시간 안 늘림)
     if class_name == "general trash":
-        remaining_time = 4  # 일반쓰레기: 라즈베리파이 동작만
+        remaining_time = 4  # 유지
     else:
-        remaining_time = 5  # 회전 분류: 라즈베리파이 동작 + 복귀
+        remaining_time = 5  # 유지
     
-    print(f"⏰ 아두이노 전체 동작 완료 대기 중... ({remaining_time}초)")
+    print(f"아두이노 전체 동작 완료 대기 중... ({remaining_time}초)")
     time.sleep(remaining_time)
     
-    # 5단계: 꽉 찬 통 확인 및 입구 막기
-    level = check_trash_level(class_name)
-    print(f"📊 {class_name} 현재 채움률: {level}%")
+    # 5단계: 새로운 측정값 확인 (시간 늘리지 않고 똑똑하게)
+    final_level = check_for_new_level(class_name, old_level, max_checks=5)
     
-    if level >= 80:  # 80% 이상이면 꽉 참
-        print(f"🚫 {class_name} 쓰레기통이 꽉 참 ({level}%) - 입구를 막습니다")
+    print(f"{class_name} 최종 채움률: {final_level}%")
+    
+    # 나머지 입구 막기 로직은 기존과 동일
+    if final_level >= 80:
+        print(f"🚫 {class_name} 쓰레기통이 꽉 참 ({final_level}%) - 입구를 막습니다")
         
-        # 일반쓰레기 특별 처리: 0도에서 +90도로 명시적 이동
         if class_name == "general trash":
-            print("🔄 일반쓰레기 꽉참 - 0도에서 +90도로 입구 막기 이동")
             block_success = send_to_arduino("block_entrance")
             if block_success:
-                time.sleep(3)  # 90도 회전 대기
-                print("✅ 일반쓰레기 입구 막기 완료 - +90도 위치")
-            else:
-                print("⚠️ 일반쓰레기 입구 막기 명령 실패")
+                time.sleep(3)
+                print("일반쓰레기 입구 막기 완료")
         else:
-            # 기존 로직: 다른 분류는 복귀 후 입구 막기
-            print(f"🔄 {class_name} 꽉참 - 현재 위치에서 +90도 추가 회전으로 입구 막기")
             block_success = send_to_arduino("block_entrance")
             if block_success:
-                time.sleep(3)  # 입구 막기 대기
+                time.sleep(3)
                 print(f"{class_name} 입구 막기 완료")
-            else:
-                print(f"{class_name} 입구 막기 명령 실패")
     else:
-        print(f"{class_name} 쓰레기통 정상 ({level}%) - 계속 사용 가능")
+        print(f"{class_name} 쓰레기통 정상 ({final_level}%) - 계속 사용 가능")
     
-    print("전체 분류 프로세스 완료")
     return True
+
+def get_current_level_quick(class_name):
+    try:
+        res = requests.get("http://43.202.10.147:3001/api/levels", timeout=3)
+        if res.ok:
+            level_data = res.json()
+            for item in level_data:
+                if item.get('type') == class_name:
+                    return item.get('level', 0)
+    except:
+        pass
+    return 0
+
+def check_for_new_level(class_name, old_level, max_checks=5):
+    print(f"새로운 측정값 확인 중... (기준값: {old_level}%)")
+    
+    for i in range(max_checks):
+        current_level = get_current_level_quick(class_name)
+        print(f"체크 {i+1}: {current_level}%")
+        
+        # 새로운 값이 감지되면 즉시 반환
+        if current_level != old_level:
+            print(f"새로운 값 감지: {old_level}% → {current_level}%")
+            return current_level
+        
+        # 마지막 체크가 아니면 2초 대기
+        if i < max_checks - 1:
+            time.sleep(2)
+    
+    print(f"새로운 값 감지되지 않음 - 현재값 사용: {current_level}%")
+    return current_level
+
 
 def run_once():
     """메인 분류 처리 함수"""
@@ -306,17 +342,31 @@ def run_once():
         cv2.imwrite(result_path, annotated)
         print(f"[{class_name}] 결과 이미지 저장 완료 → {result_path}")
 
+        # 🔥 여기가 핵심 수정 부분: 실제 회전 각도 계산
+        def get_rotation_angle(class_name):
+            """분류에 따른 회전 각도 반환"""
+            angle_map = {
+                "general trash": 0,    # 0도 (회전 없음)
+                "plastic": 90,         # 90도 회전
+                "metal": 180,          # 180도 회전  
+                "glass": 270           # 270도 회전
+            }
+            return angle_map.get(class_name, 0)
+
+        # 실제 회전 각도 계산
+        rotation_angle = get_rotation_angle(class_name)
+
         # 아두이노 + 라즈베리파이 통합 제어
         success = control_step_motor_arduino_with_blocking(class_name)
         
         if success:
-            print(f" [{class_name}] 아두이노 분류 및 입구 제어 완료")
+            print(f"✅ [{class_name}] 아두이노 분류 및 입구 제어 완료")
         else:
-            print(f" [{class_name}] 분류 처리 실패")
+            print(f"❌ [{class_name}] 분류 처리 실패")
         
-        # 이미지 업로드 및 완료 신호
-        send_image_to_server(result_path, class_name, 0)
-
+        # 🔥 수정된 부분: 실제 회전 각도를 전달
+        send_image_to_server(result_path, class_name, rotation_angle)
+        print(f"📤 이미지 업로드 완료 - 각도: {rotation_angle}도")
 
     except Exception as e:
         print(f"처리 중단: {e}")

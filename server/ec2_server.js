@@ -108,7 +108,24 @@ app.post("/update", async (req, res) => {
         [device_id, className, level]
       );
       console.log(`[📩 업데이트] ${className}: ${level}% → DB 저장 완료`);
-      alertNamespace.emit("level_update"); //  실시간 level 알림 전송
+      
+      // 실시간 알림 전송
+      alertNamespace.emit("level_update"); 
+      
+      // 80% 이상일 때 관리자 알림 전송
+      if (level >= 80) {
+        const koreanName = getKoreanClassName(className);
+        const alertMessage = `${koreanName} 쓰레기통이 ${level}%로 가득 찼습니다!`;
+        
+        console.log(`🚨 관리자 알림: ${alertMessage}`);
+        alertNamespace.emit("admin_alert", { 
+          type: className, 
+          level: level,
+          message: alertMessage,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
       res.sendStatus(200);
     } catch (err) {
       console.error("❌ levels DB 저장 실패:", err);
@@ -120,6 +137,16 @@ app.post("/update", async (req, res) => {
   }
 });
 
+// 한글 클래스명 변환 함수 추가
+function getKoreanClassName(className) {
+  const classNameMap = {
+    "general trash": "일반쓰레기",
+    "plastic": "플라스틱",
+    "metal": "금속",
+    "glass": "유리"
+  };
+  return classNameMap[className] || className;
+}
 
 // 사용자 UI → 실시간 상태 조회
 app.get("/data", (req, res) => {

@@ -19,7 +19,7 @@ os.environ['LD_PRELOAD'] = '/usr/lib/aarch64-linux-gnu/libgomp.so.1'
 os.environ["OMP_NUM_THREADS"] = "2"
 
 # Raspberry Pi 정보
-PI_HOST = '192.168.148.20'
+PI_HOST = ''
 PI_PORT = 9999
 
 # 아두이노 시리얼 통신 설정

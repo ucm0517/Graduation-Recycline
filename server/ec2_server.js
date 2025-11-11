@@ -26,8 +26,8 @@ app.use(express.json());
 const db = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "Monde1234!",
-  database: "admin_system",
+  password: "",
+  database: "",
 });
 
 //  메모리 데이터 저장용

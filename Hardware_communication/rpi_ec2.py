@@ -174,17 +174,17 @@ def start_server():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
         s.listen()
-        print("🚪 모터 제어 서버 대기 중...")
-        print("📍 라즈베리파이는 고정 위치에서 대기 (젯슨이 회전)")
-        print("⚡ 초음파 측정 1회로 최적화 (속도 향상)")
+        print(" 모터 제어 서버 대기 중...")
+        print(" 라즈베리파이는 고정 위치에서 대기 (젯슨이 회전)")
+        print(" 초음파 측정 1회로 최적화 (속도 향상)")
 
         try:
             while True:
                 conn, addr = s.accept()
                 with conn:
-                    print(f"📥 연결됨: {addr}")
+                    print(f" 연결됨: {addr}")
                     class_name = conn.recv(1024).decode().strip()
-                    print(f"📦 수신된 분류: {class_name}")
+                    print(f" 수신된 분류: {class_name}")
                     handle_class(class_name)
 
         except KeyboardInterrupt:
@@ -193,7 +193,7 @@ def start_server():
             GPIO.output(ENA_PIN, GPIO.HIGH)
             pwm.stop()
             GPIO.cleanup()
-            print("🛑 서버 종료 및 GPIO 정리 완료")
+            print(" 서버 종료 및 GPIO 정리 완료")
 
 if __name__ == "__main__":
     start_server()

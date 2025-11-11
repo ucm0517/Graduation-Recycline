@@ -28,8 +28,8 @@ ARDUINO_BAUD = 9600
 arduino_serial = None
 
 # EC2 주소
-UI_BEGIN_ENDPOINT = "http://43.202.10.147:3001/begin"
-UPLOAD_ENDPOINT = "http://43.202.10.147:3001/upload"
+UI_BEGIN_ENDPOINT = "http://EC2_IP:3001/begin"
+UPLOAD_ENDPOINT = "http://EC2_IP:3001/upload"
 
 # Flask 앱
 app = Flask(__name__)
